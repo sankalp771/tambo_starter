@@ -1,0 +1,99 @@
+{
+  "flights": [
+    {
+      "id": "FL-001",
+      "airline": "IndiGo",
+      "flightNumber": "6E-2134",
+      "from": "DEL",
+      "fromCity": "Delhi",
+      "to": "BOM",
+      "toCity": "Mumbai",
+      "departure": "06:00",
+      "arrival": "08:15",
+      "duration": "2h 15m",
+      "price": 5400,
+      "currency": "INR",
+      "stops": 0,
+      "class": "Economy"
+    },
+    {
+      "id": "FL-002",
+      "airline": "Air India",
+      "flightNumber": "AI-865",
+      "from": "DEL",
+      "fromCity": "Delhi",
+      "to": "BOM",
+      "toCity": "Mumbai",
+      "departure": "09:30",
+      "arrival": "11:45",
+      "duration": "2h 15m",
+      "price": 6200,
+      "currency": "INR",
+      "stops": 0,
+      "class": "Economy"
+    },
+    {
+      "id": "FL-003",
+      "airline": "Vistara",
+      "flightNumber": "UK-981",
+      "from": "DEL",
+      "fromCity": "Delhi",
+      "to": "BOM",
+      "toCity": "Mumbai",
+      "departure": "12:15",
+      "arrival": "14:30",
+      "duration": "2h 15m",
+      "price": 7100,
+      "currency": "INR",
+      "stops": 0,
+      "class": "Business"
+    },
+    {
+      "id": "FL-004",
+      "airline": "SpiceJet",
+      "flightNumber": "SG-123",
+      "from": "BLR",
+      "fromCity": "Bangalore",
+      "to": "DEL",
+      "toCity": "Delhi",
+      "departure": "18:45",
+      "arrival": "21:30",
+      "duration": "2h 45m",
+      "price": 4800,
+      "currency": "INR",
+      "stops": 0,
+      "class": "Economy"
+    },
+    {
+      "id": "FL-005",
+      "airline": "Akasa Air",
+      "flightNumber": "QP-1102",
+      "from": "BOM",
+      "fromCity": "Mumbai",
+      "to": "BLR",
+      "toCity": "Bangalore",
+      "departure": "07:20",
+      "arrival": "09:10",
+      "duration": "1h 50m",
+      "price": 3900,
+      "currency": "INR",
+      "stops": 0,
+      "class": "Economy"
+    }
+  ],
+  "passengerFields": {
+    "firstName": "String",
+    "lastName": "String",
+    "email": "Email",
+    "phone": "Phone",
+    "gender": ["Male", "Female", "Other"],
+    "dateOfBirth": "Date",
+    "frequentFlyerNumber": "String (Optional)"
+  },
+  "paymentFields": {
+    "cardHolderName": "String",
+    "cardNumber": "CreditCardNumber",
+    "expiryDate": "MM/YY",
+    "cvv": "3-digit"
+  }
+}
