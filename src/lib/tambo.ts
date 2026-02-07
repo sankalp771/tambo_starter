@@ -11,6 +11,9 @@
 import { Graph, graphSchema } from "@/components/tambo/graph";
 import { DataCard, dataCardSchema } from "@/components/ui/card-data";
 import { FlightSearch, flightSearchSchema } from "@/components/mmt/FlightSearch";
+import { SearchHeader } from "@/components/mmt/SearchHeader";
+import { FlightResults } from "@/components/mmt/FlightResults";
+import { FlightFilters } from "@/components/mmt/FlightFilters";
 import flightsData from "@/lib/data/flights.json";
 import {
   getCountryPopulations,
@@ -77,26 +80,41 @@ export const tools: TamboTool[] = [
   },
   {
     name: "searchFlights",
-    description: "Search for available flights based on origin, destination and date.",
+    description: "Search for available flights. ALSO UPDATES THE URL to show results on the page.",
     tool: async (input: { from: string; to: string; date: string }) => {
-      const query = input.from.toLowerCase();
-      const dest = input.to.toLowerCase();
+      const matchesCity = (inputVal: string, code: string, city: string) => {
+        const normalizedInput = inputVal.toLowerCase().trim();
+        const normalizedCode = code.toLowerCase();
+        const normalizedCity = city.toLowerCase();
+        return normalizedCode === normalizedInput ||
+          normalizedCity.includes(normalizedInput) ||
+          normalizedInput.includes(normalizedCity);
+      };
 
-      // Filter from our new JSON file
-      const results = flightsData.flights.filter(f =>
-        f.fromCity.toLowerCase().includes(query) ||
-        f.from.toLowerCase().includes(query) ||
-        f.toCity.toLowerCase().includes(dest) ||
-        f.to.toLowerCase().includes(dest)
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set("from", input.from);
+        url.searchParams.set("to", input.to);
+        url.searchParams.set("date", input.date);
+        window.history.pushState({}, '', url.toString());
+      }
+      const results = flightsData.filter(f =>
+        matchesCity(input.from, f.from, f.fromCity) &&
+        matchesCity(input.to, f.to, f.toCity) &&
+        f.date === input.date
       );
-
       return results.map(f => ({
         id: f.id,
         airline: f.airline,
-        price: `${f.currency} ${f.price.toLocaleString()}`,
+        price: `₹ ${parseInt(f.price).toLocaleString()}`,
         time: `${f.departure} - ${f.arrival}`,
+        departure: f.departure,
+        arrival: f.arrival,
+        from: f.from,
+        to: f.to,
         duration: f.duration,
-        flightNumber: f.flightNumber
+        flightNumber: f.flightNumber,
+        logo: f.logo
       }));
     },
     inputSchema: z.object({
@@ -109,9 +127,40 @@ export const tools: TamboTool[] = [
       airline: z.string(),
       price: z.string(),
       time: z.string(),
+      departure: z.string(),
+      arrival: z.string(),
+      from: z.string(),
+      to: z.string(),
       duration: z.string(),
-      flightNumber: z.string()
+      flightNumber: z.string(),
+      logo: z.string().optional()
     })),
+  },
+  {
+    name: "bookFlight",
+    description: "NAVIGATE to the checkout page for a specific flight.",
+    tool: async (input: {
+      id: string; airline: string; price: string;
+      departure: string; arrival: string; from: string;
+      to: string; logo: string;
+    }) => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams({
+          id: input.id, airline: input.airline,
+          price: input.price.replace('₹ ', '').replace(',', ''),
+          departure: input.departure, arrival: input.arrival,
+          from: input.from, to: input.to, logo: input.logo
+        });
+        window.location.href = `/checkout?${params.toString()}`;
+      }
+      return { success: true };
+    },
+    inputSchema: z.object({
+      id: z.string(), airline: z.string(), price: z.string(),
+      departure: z.string(), arrival: z.string(), from: z.string(),
+      to: z.string(), logo: z.string()
+    }),
+    outputSchema: z.object({ success: z.boolean() })
   },
   // Add more tools here
 ];
@@ -144,5 +193,35 @@ export const components: TamboComponent[] = [
     component: FlightSearch,
     propsSchema: flightSearchSchema,
   },
+  {
+    name: "SearchHeader",
+    description: "The header on the flight results page that allows refining the search.",
+    component: SearchHeader,
+    propsSchema: z.object({
+      fromCity: z.string(),
+      toCity: z.string(),
+      departureDate: z.string(),
+      travellers: z.string(),
+      tripType: z.string(),
+    }),
+  },
+  {
+    name: "FlightResults",
+    description: "The list of flight search results. Allows highlighting specific flights.",
+    component: FlightResults,
+    propsSchema: z.object({
+      highlightedFlightId: z.string().optional(),
+    }),
+  },
+  {
+    name: "FlightFilters",
+    description: "Search filters for flights, like non-stop, time of day, and refundability.",
+    component: FlightFilters,
+    propsSchema: z.object({
+      nonStop: z.boolean().optional(),
+      morningDepartures: z.boolean().optional(),
+      refundableFares: z.boolean().optional(),
+    }),
+  }
   // Add more components here
 ];

@@ -11,6 +11,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { TamboClientProvider } from "@/components/TamboClientProvider";
+import { TravelAssistant } from "@/components/TravelAssistant";
+import { BookingProvider } from "@/context/BookingContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,7 +25,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <BookingProvider>
+          <TamboClientProvider>
+            {children}
+            <TravelAssistant />
+          </TamboClientProvider>
+        </BookingProvider>
       </body>
     </html>
   );

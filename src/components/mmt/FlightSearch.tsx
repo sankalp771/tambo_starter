@@ -27,7 +27,16 @@ function FlightSearchBase(props: FlightSearchProps) {
     if (JSON.stringify(props) !== JSON.stringify(data)) {
       setData(props);
       setIsSyncing(true);
-      const timer = setTimeout(() => setIsSyncing(false), 2500);
+
+      // Auto-trigger search when AI updates the interactable props
+      const timer = setTimeout(() => {
+        setIsSyncing(false);
+        if (typeof window !== 'undefined') {
+          const from = props.fromCity.split(',')[0].trim();
+          const to = props.toCity.split(',')[0].trim();
+          window.location.href = `/flights?from=${from}&to=${to}&date=${props.departureDate}&travellers=${props.travellers}&class=${props.travelClass}`;
+        }
+      }, 2500);
       return () => clearTimeout(timer);
     }
   }, [props]);

@@ -1,8 +1,23 @@
-"use client";
-
+import { withInteractable } from "@tambo-ai/react";
+import { z } from "zod";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-export function FlightFilters() {
+const flightFiltersSchema = z.object({
+    nonStop: z.boolean().optional(),
+    morningDepartures: z.boolean().optional(),
+    refundableFares: z.boolean().optional(),
+});
+
+type FlightFiltersProps = z.infer<typeof flightFiltersSchema>;
+
+function FlightFiltersBase(props: FlightFiltersProps) {
+    const [data, setData] = useState<FlightFiltersProps>(props);
+
+    useEffect(() => {
+        setData(props);
+    }, [props]);
+
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto overflow-x-hidden custom-scrollbar">
             <div className="flex items-center justify-between mb-6">
@@ -11,10 +26,12 @@ export function FlightFilters() {
             </div>
 
             <div className="flex flex-wrap gap-2 mb-8">
-                <div className="flex items-center gap-1.5 bg-gray-100 rounded px-2 py-1">
-                    <span className="text-[10px] font-black text-gray-700 uppercase">Non Stop</span>
-                    <X className="w-3 h-3 text-blue-500 cursor-pointer" />
-                </div>
+                {data.nonStop && (
+                    <div className="flex items-center gap-1.5 bg-gray-100 rounded px-2 py-1">
+                        <span className="text-[10px] font-black text-gray-700 uppercase">Non Stop</span>
+                        <X className="w-3 h-3 text-blue-500 cursor-pointer" />
+                    </div>
+                )}
             </div>
 
             {/* Popular Filters */}
@@ -22,15 +39,15 @@ export function FlightFilters() {
                 <h3 className="text-xs font-black uppercase tracking-wider mb-4">Popular Filters</h3>
                 <div className="flex flex-col gap-3">
                     {[
-                        { label: "Non Stop", count: "₹ 5,641", checked: true },
+                        { label: "Non Stop", count: "₹ 5,641", key: "nonStop" },
+                        { label: "Morning Departures", count: "₹ 5,744", key: "morningDepartures" },
+                        { label: "Refundable Fares", count: "₹ 5,641", key: "refundableFares" },
                         { label: "Hide Nearby Airports", count: "₹ 5,641" },
-                        { label: "Refundable Fares", count: "₹ 5,641" },
-                        { label: "Morning Departures", count: "₹ 5,744" }
                     ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between group cursor-pointer">
+                        <div key={i} className="flex items-center justify-between group cursor-pointer" onClick={() => item.key && setData(prev => ({ ...prev, [item.key!]: !prev[item.key as keyof FlightFiltersProps] }))}>
                             <div className="flex items-center gap-3">
-                                <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${item.checked ? "bg-blue-600 border-blue-600" : "border-gray-300 group-hover:border-blue-400 font-bold"}`}>
-                                    {item.checked && <div className="w-2 h-1 border-white border-b-2 border-l-2 -rotate-44 mb-0.5"></div>}
+                                <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${item.key && data[item.key as keyof FlightFiltersProps] ? "bg-blue-600 border-blue-600" : "border-gray-300 group-hover:border-blue-400 font-bold"}`}>
+                                    {item.key && data[item.key as keyof FlightFiltersProps] && <div className="w-2 h-1 border-white border-b-2 border-l-2 -rotate-44 mb-0.5"></div>}
                                 </div>
                                 <span className="text-xs font-bold text-gray-700">{item.label}</span>
                             </div>
@@ -79,7 +96,7 @@ export function FlightFilters() {
                 </div>
             </div>
 
-            {/* Price Slider */}
+            {/* One Way Price Slider */}
             <div className="mb-8">
                 <h3 className="text-xs font-black uppercase tracking-wider mb-4 border-t pt-6 border-gray-50">One Way Price</h3>
                 <div className="px-1">
@@ -88,31 +105,6 @@ export function FlightFilters() {
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-blue-500 rounded-full shadow-md cursor-pointer"></div>
                         <div className="absolute right-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-blue-500 rounded-full shadow-md cursor-pointer"></div>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
-                        <span>₹ 5,641</span>
-                        <span>₹ 16,500</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Stops */}
-            <div className="mb-8">
-                <h3 className="text-xs font-black uppercase tracking-wider mb-4 border-t pt-6 border-gray-50">Stops From New Delhi</h3>
-                <div className="flex flex-col gap-3">
-                    {[
-                        { label: "Non Stop", count: "₹ 5,641", checked: true },
-                        { label: "1 Stop", count: "₹ 8,449" }
-                    ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between group cursor-pointer">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${item.checked ? "bg-blue-600 border-blue-600" : "border-gray-300 group-hover:border-blue-400"}`}>
-                                    {item.checked && <div className="w-2 h-1 border-white border-b-2 border-l-2 -rotate-45 mb-0.5"></div>}
-                                </div>
-                                <span className="text-xs font-bold text-gray-700">{item.label}</span>
-                            </div>
-                            <span className="text-[10px] font-bold text-gray-400">{item.count}</span>
-                        </div>
-                    ))}
                 </div>
             </div>
 
@@ -133,4 +125,14 @@ export function FlightFilters() {
       `}</style>
         </div>
     );
+}
+
+const InteractableFlightFilters = withInteractable(FlightFiltersBase, {
+    componentName: "FlightFilters",
+    description: "Search filters for flights, like non-stop, time of day, and refundability.",
+    propsSchema: flightFiltersSchema,
+});
+
+export function FlightFilters() {
+    return <InteractableFlightFilters />;
 }
