@@ -64,7 +64,12 @@ function CheckoutPageBase(props: CheckoutProps) {
 
     const baseFare = parseInt(priceStr.replace(/,/g, '')) || 5641;
     const taxes = 859;
-    const totalAmount = `₹ ${(baseFare + taxes).toLocaleString()}`;
+
+    // Calculate totals based on passenger count
+    const passengerCount = Math.max(1, booking.passengers.length);
+    const totalBaseFare = baseFare * passengerCount;
+    const totalTaxes = taxes * passengerCount;
+    const totalAmount = `₹ ${(totalBaseFare + totalTaxes).toLocaleString()}`;
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900 overflow-x-hidden">
@@ -266,16 +271,16 @@ function CheckoutPageBase(props: CheckoutProps) {
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2">
                                     <Plus className="w-3 h-3 text-gray-400 font-bold" />
-                                    <span className="text-[10px] font-black uppercase text-gray-500">Base Fare</span>
+                                    <span className="text-[10px] font-black uppercase text-gray-500">Total Base Fare ({passengerCount} Adult)</span>
                                 </div>
-                                <span className="text-xs font-black tabular-nums">₹ {baseFare.toLocaleString()}</span>
+                                <span className="text-xs font-black tabular-nums">₹ {totalBaseFare.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2">
                                     <Plus className="w-3 h-3 text-gray-400 font-bold" />
-                                    <span className="text-[10px] font-black uppercase text-gray-500">Taxes & Surcharges</span>
+                                    <span className="text-[10px] font-black uppercase text-gray-500">Total Taxes & Surcharges</span>
                                 </div>
-                                <span className="text-xs font-black tabular-nums">₹ {taxes.toLocaleString()}</span>
+                                <span className="text-xs font-black tabular-nums">₹ {totalTaxes.toLocaleString()}</span>
                             </div>
                             <div className="pt-4 border-t border-dashed flex justify-between items-center">
                                 <span className="text-lg font-black italic uppercase">Total Amount</span>

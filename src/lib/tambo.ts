@@ -82,7 +82,7 @@ export const tools: TamboTool[] = [
   {
     name: "searchFlights",
     description: "Search for available flights. ALSO UPDATES THE URL to show results on the page.",
-    tool: async (input: { from: string; to: string; date: string }) => {
+    tool: async (input: { from: string; to: string; date: string; travellers?: number }) => {
       const matchesCity = (inputVal: string, code: string, city: string) => {
         const normalizedInput = inputVal.toLowerCase().trim();
         const normalizedCode = code.toLowerCase();
@@ -97,6 +97,7 @@ export const tools: TamboTool[] = [
         url.searchParams.set("from", input.from);
         url.searchParams.set("to", input.to);
         url.searchParams.set("date", input.date);
+        if (input.travellers) url.searchParams.set("travellers", input.travellers.toString());
         window.history.pushState({}, '', url.toString());
       }
 
@@ -105,7 +106,7 @@ export const tools: TamboTool[] = [
         matchesCity(input.to, f.to, f.toCity) &&
         f.date === input.date
       );
-      return results.map(f => ({
+      return results.map((f: any) => ({
         id: f.id,
         airline: f.airline,
         price: `₹ ${parseInt(f.price).toLocaleString()}`,
@@ -123,6 +124,7 @@ export const tools: TamboTool[] = [
       from: z.string(),
       to: z.string(),
       date: z.string(),
+      travellers: z.number().optional(),
     }),
     outputSchema: z.array(z.object({
       id: z.string(),
