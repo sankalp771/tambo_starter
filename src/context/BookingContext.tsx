@@ -13,6 +13,7 @@ interface BookingState {
     contactEmail: string;
     contactMobile: string;
     selectedFlightId: string | null;
+    selectedSeats: string[];
 }
 
 interface BookingContextType {
@@ -29,6 +30,7 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
         contactEmail: '',
         contactMobile: '',
         selectedFlightId: null,
+        selectedSeats: [],
     });
 
     const updateBooking = (updates: Partial<BookingState>) => {

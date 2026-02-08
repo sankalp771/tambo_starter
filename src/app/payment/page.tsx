@@ -4,27 +4,36 @@ import {
     MessageSquare, X, ChevronDown, ChevronRight, Info, Plus, Tag, Check,
     Minus, Users, ArrowRight, Car, MapPin, Calendar, Clock, Star, Zap,
     Fuel, ShieldCheck, ShieldPlus, Heart, Trees, Pencil, Wallet, CreditCard,
-    Smartphone, Landmark, History, Gift, Shield
+    Smartphone, Landmark, History, Gift, Shield, Download
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useBooking } from "@/context/BookingContext";
+import { TicketModal } from "@/components/mmt/TicketModal";
 
 export default function PaymentPage() {
     const searchParams = useSearchParams();
+    const { booking } = useBooking();
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
     const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+    const [isTicketOpen, setIsTicketOpen] = useState(false);
 
     // Get flight data from URL
     const fromCity = searchParams.get("from") || "DEL";
     const toCity = searchParams.get("to") || "BOM";
     const airline = searchParams.get("airline") || "Akasa Air";
-    const price = searchParams.get("price") || "5,641";
+    const priceStr = searchParams.get("price") || "5,641";
     const departure = searchParams.get("departure") || "16:00";
     const arrival = searchParams.get("arrival") || "18:20";
     const logo = searchParams.get("logo") || "🧡";
     const flightId = searchParams.get("id") || "QP 1128";
+
+    const totalVal = parseInt(priceStr.replace(/,/g, ''));
+    const passengerCount = Math.max(1, booking.passengers.length);
+    const totalTaxes = 843 * passengerCount;
+    const totalBase = totalVal - totalTaxes;
 
     useEffect(() => {
         if (isQRModalOpen && timeLeft > 0) {
@@ -87,7 +96,7 @@ export default function PaymentPage() {
 
                 <div className="text-white flex flex-col items-end">
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Amount</span>
-                    <span className="text-xl font-black italic tabular-nums">₹ {price}</span>
+                    <span className="text-xl font-black italic tabular-nums">₹ {totalVal.toLocaleString()}</span>
                 </div>
             </nav>
 
@@ -146,7 +155,7 @@ export default function PaymentPage() {
                                 </div>
 
                                 <div className="text-center">
-                                    <p className="text-sm font-black italic uppercase tracking-wider text-gray-800">Scan QR to pay ₹ {price}</p>
+                                    <p className="text-sm font-black italic uppercase tracking-wider text-gray-800">Scan QR to pay ₹ {totalVal.toLocaleString()}</p>
                                     <p className="text-[10px] font-bold text-gray-400 mt-1">Use Google Pay, PhonePe, Paytm or any UPI app</p>
                                 </div>
                             </div>
@@ -163,10 +172,10 @@ export default function PaymentPage() {
                                     <div className="flex-1 relative">
                                         <input
                                             type="text"
-                                            placeholder="sankalp@upi"
-                                            className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-6 py-4.5 text-sm font-black focus:outline-none focus:border-blue-400 focus:bg-white transition-all shadow-sm"
+                                            defaultValue="sankalp@upi"
+                                            className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-6 pr-28 py-4.5 text-sm font-black focus:outline-none focus:border-blue-400 focus:bg-white transition-all shadow-sm"
                                         />
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 bg-white/80 backdrop-blur-sm pl-2 py-1 rounded-lg">
                                             <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white scale-75"><Check className="w-3 h-3" /></div>
                                             <span className="text-[10px] font-black text-emerald-500 uppercase">Verified</span>
                                         </div>
@@ -207,18 +216,18 @@ export default function PaymentPage() {
 
                             <div className="flex flex-col gap-5 border-b border-dashed pb-8 border-gray-100">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Base Fare</span>
-                                    <span className="text-xs font-black tabular-nums text-gray-800">₹ {parseInt(price.replace(/,/g, '')) - 843}</span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Base Fare ({passengerCount} Adult)</span>
+                                    <span className="text-xs font-black tabular-nums text-gray-800">₹ {totalBase.toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Taxes & Fees</span>
-                                    <span className="text-xs font-black tabular-nums text-gray-800">₹ 843</span>
+                                    <span className="text-xs font-black tabular-nums text-gray-800">₹ {totalTaxes.toLocaleString()}</span>
                                 </div>
                             </div>
 
                             <div className="pt-6 flex items-center justify-between">
                                 <span className="text-lg font-black italic uppercase tracking-wider text-gray-900">Total Price</span>
-                                <span className="text-2xl font-black italic tabular-nums text-blue-600">₹ {price}</span>
+                                <span className="text-2xl font-black italic tabular-nums text-blue-600">₹ {totalVal.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
@@ -261,7 +270,7 @@ export default function PaymentPage() {
                             </div>
 
                             <div className="text-center">
-                                <p className="text-3xl font-black tabular-nums text-gray-900">₹ {price}</p>
+                                <p className="text-3xl font-black tabular-nums text-gray-900">₹ {totalVal.toLocaleString()}</p>
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-2 italic">Ref ID: MMT839HH83</p>
                             </div>
 
@@ -292,13 +301,35 @@ export default function PaymentPage() {
                             <div className="text-center flex flex-col gap-4">
                                 <h2 className="text-5xl font-black italic uppercase tracking-tighter text-white">Payment Successful!</h2>
                                 <p className="text-emerald-400 text-sm font-black uppercase tracking-[0.3em] font-mono">PNR: MYTRI-992BH-S7</p>
-                                <p className="text-gray-400 text-sm font-bold mt-4">Your tickets have been sent to sankalp@example.com</p>
+                                <p className="text-gray-400 text-sm font-bold mt-4">Your tickets have been sent to {booking.contactEmail || 'sankalp@example.com'}</p>
                             </div>
-                            <Link href="/" className="mt-10 bg-white text-gray-900 rounded-full px-16 py-5 font-black uppercase text-sm tracking-widest hover:scale-110 transition-all active:scale-95 shadow-2xl">BACK TO HOME</Link>
+                            <div className="flex flex-col items-center gap-4">
+                                <Link href="/" className="bg-white text-gray-900 rounded-full px-16 py-5 font-black uppercase text-sm tracking-widest hover:scale-110 transition-all active:scale-95 shadow-2xl">BACK TO HOME</Link>
+                                <button
+                                    onClick={() => setIsTicketOpen(true)}
+                                    className="text-emerald-400 font-black uppercase text-[10px] tracking-[0.3em] hover:underline flex items-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" /> Download/Print Ticket
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
+
+            <TicketModal
+                isOpen={isTicketOpen}
+                onClose={() => setIsTicketOpen(false)}
+                flightDetails={{
+                    from: fromCity,
+                    to: toCity,
+                    airline: airline,
+                    departure: departure,
+                    arrival: arrival,
+                    logo: logo,
+                    id: flightId
+                }}
+            />
         </div>
     );
 }
