@@ -27,6 +27,10 @@ function CheckoutPageBase(props: CheckoutProps) {
     const { booking, updateBooking } = useBooking();
     const [isReviewOpen, setIsReviewOpen] = useState(false);
 
+    const searchParams = useSearchParams();
+    const travellersParam = searchParams.get("travellers");
+    const passengerCountFromUrl = travellersParam ? parseInt(travellersParam) : 1;
+
     // Sync AI props to local booking context
     useEffect(() => {
         const updates: any = {};
@@ -39,6 +43,13 @@ function CheckoutPageBase(props: CheckoutProps) {
                 age: props.passengerAge || '21',
                 gender: props.passengerGender || 'Male'
             }];
+        } else if (booking.passengers.length === 0) {
+            // Initialize from URL if empty
+            updates.passengers = Array.from({ length: passengerCountFromUrl }).map(() => ({
+                name: '',
+                age: '21',
+                gender: 'Male'
+            }));
         }
 
         if (props.contactEmail) updates.contactEmail = props.contactEmail;
@@ -47,10 +58,9 @@ function CheckoutPageBase(props: CheckoutProps) {
         if (Object.keys(updates).length > 0) {
             updateBooking(updates);
         }
-    }, [props]);
+    }, [props, passengerCountFromUrl]);
 
     const router = useRouter();
-    const searchParams = useSearchParams();
 
     // Get flight data from URL
     const fromCity = searchParams.get("from") || "DEL";
@@ -66,7 +76,7 @@ function CheckoutPageBase(props: CheckoutProps) {
     const taxes = 859;
 
     // Calculate totals based on passenger count
-    const passengerCount = Math.max(1, booking.passengers.length);
+    const passengerCount = Math.max(passengerCountFromUrl, booking.passengers.length);
     const totalBaseFare = baseFare * passengerCount;
     const totalTaxes = taxes * passengerCount;
     const totalAmount = `₹ ${(totalBaseFare + totalTaxes).toLocaleString()}`;
@@ -294,7 +304,7 @@ function CheckoutPageBase(props: CheckoutProps) {
             <ReviewDetailsModal
                 isOpen={isReviewOpen}
                 onClose={() => setIsReviewOpen(false)}
-                onConfirm={() => router.push(`/seats?id=${flightId}&airline=${airline}&price=${baseFare}&departure=${departure}&arrival=${arrival}&from=${fromCity}&to=${toCity}&logo=${logo}`)}
+                onConfirm={() => router.push(`/seats?id=${flightId}&airline=${airline}&price=${baseFare}&departure=${departure}&arrival=${arrival}&from=${fromCity}&to=${toCity}&logo=${logo}&travellers=${passengerCount}`)}
             />
         </div>
     );

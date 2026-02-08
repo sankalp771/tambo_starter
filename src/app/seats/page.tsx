@@ -4,11 +4,13 @@ import { MessageSquare, X, ChevronDown, ChevronRight, Info, Plus, Tag, Check, Mi
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useBooking } from "@/context/BookingContext";
 
 export default function SeatsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+    const { booking, updateBooking } = useBooking();
+    const selectedSeats = booking.selectedSeats;
     const [activeCabTab, setActiveCabTab] = useState<'to_airport' | 'from_airport'>('to_airport');
     const [selectedCabsCount, setSelectedCabsCount] = useState(0);
 
@@ -16,24 +18,59 @@ export default function SeatsPage() {
     const fromCity = searchParams.get("from") || "DEL";
     const toCity = searchParams.get("to") || "BOM";
     const airline = searchParams.get("airline") || "Akasa Air";
-    const price = searchParams.get("price") || "5,641";
+    const priceStr = searchParams.get("price") || "5,641";
     const departure = searchParams.get("departure") || "16:00";
     const arrival = searchParams.get("arrival") || "18:20";
     const logo = searchParams.get("logo") || "🧡";
     const flightId = searchParams.get("id") || "QP 1128";
 
-    // Calculate total fare
-    const baseAmount = parseInt(price.replace(/,/g, ''));
-    const seatPrice = selectedSeats.length * 350; // Mock seat price
-    const totalAmount = (baseAmount + seatPrice).toLocaleString();
+    const travellersParam = searchParams.get("travellers");
+    const passengerCountFromUrl = travellersParam ? parseInt(travellersParam) : 1;
+    const passengerCount = Math.max(passengerCountFromUrl, booking.passengers.length);
+
+    const baseAmount = parseInt(priceStr.replace(/,/g, ''));
+    const seatPrice = selectedSeats.length * 350;
+
+    // Total for all passengers
+    const totalBase = baseAmount * passengerCount;
+    const taxes = 843 * passengerCount;
+    const otherServices = (228 * passengerCount) + seatPrice;
+    const discounts = 227 * passengerCount;
+
+    const totalAmountValue = totalBase + taxes + otherServices - discounts;
+    const totalAmountStr = `₹ ${totalAmountValue.toLocaleString()}`;
+
+    // Auto-select consecutive seats on load
+    React.useEffect(() => {
+        if (passengerCount > 0 && selectedSeats.length !== passengerCount) {
+            const newSeats: string[] = [];
+            const cols = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+            // Try to find blocks of seats in the same row
+            for (let r = 1; r <= 40; r++) {
+                if (newSeats.length >= passengerCount) break;
+
+                // Try to take all seats in this row if needed
+                for (const c of cols) {
+                    if (newSeats.length >= passengerCount) break;
+                    newSeats.push(`${r}${c}`);
+                }
+            }
+            updateBooking({ selectedSeats: newSeats });
+        }
+    }, [passengerCount, selectedSeats.length]);
 
     const toggleSeat = (id: string) => {
         if (selectedSeats.includes(id)) {
-            setSelectedSeats(selectedSeats.filter(s => s !== id));
+            updateBooking({ selectedSeats: selectedSeats.filter(s => s !== id) });
         } else {
-            setSelectedSeats([...selectedSeats, id]);
+            if (selectedSeats.length < passengerCount) {
+                updateBooking({ selectedSeats: [...selectedSeats, id] });
+            }
         }
     };
+
+    const passengerNames = booking.passengers.map(p => p.name || "Traveller").join(", ");
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900 overflow-x-hidden pb-12">
@@ -98,7 +135,7 @@ export default function SeatsPage() {
                 {/* Left Section */}
                 <div className="flex-1 flex flex-col gap-4">
                     {/* Collapsed Summaries */}
-                    <Link href={`/checkout?id=${flightId}&airline=${airline}&price=${price}&departure=${departure}&arrival=${arrival}&from=${fromCity}&to=${toCity}&logo=${logo}`} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-center group cursor-pointer hover:bg-gray-50 transition-colors">
+                    <Link href={`/checkout?id=${flightId}&airline=${airline}&price=${priceStr}&departure=${departure}&arrival=${arrival}&from=${fromCity}&to=${toCity}&logo=${logo}`} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-center group cursor-pointer hover:bg-gray-50 transition-colors">
                         <div>
                             <h3 className="text-sm font-black italic uppercase tracking-wider">Trip Summary</h3>
                             <p className="text-[10px] font-bold text-gray-400 mt-1"><span className="text-gray-900">{fromCity} → {toCity}</span> Sunday, Feb 8 • Non Stop • 2h 20m</p>
@@ -109,7 +146,7 @@ export default function SeatsPage() {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-center group">
                         <div>
                             <h3 className="text-sm font-black italic uppercase tracking-wider">Traveller Details</h3>
-                            <p className="text-[10px] font-bold text-gray-400 mt-1">Sankalp Pandey</p>
+                            <p className="text-[10px] font-bold text-gray-400 mt-1 truncate max-w-[500px]">{passengerNames}</p>
                         </div>
                         <div className="text-blue-500 cursor-pointer hover:scale-110 transition-transform">✏️</div>
                     </div>
@@ -142,7 +179,7 @@ export default function SeatsPage() {
                                         <ArrowRight className="w-4 h-4 text-gray-400" />
                                         <span className="text-sm font-black italic uppercase text-gray-800">{toCity}</span>
                                     </div>
-                                    <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest italic">{selectedSeats.length} of 1 Seat(s) Selected</span>
+                                    <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest italic">{selectedSeats.length} of {passengerCount} Seat(s) Selected</span>
                                 </div>
 
                                 {/* Plane Layout Scrollable Rectangle Container */}
@@ -445,8 +482,8 @@ export default function SeatsPage() {
                                 </div>
                                 <div className="flex items-center gap-6">
                                     <div className="text-right">
-                                        <span className="text-xl font-black text-gray-900">₹ 279</span>
-                                        <span className="text-[10px] font-bold text-gray-400 block uppercase">/traveller</span>
+                                        <span className="text-xl font-black text-gray-900">₹ {(279 * passengerCount).toLocaleString()}</span>
+                                        <span className="text-[10px] font-bold text-gray-400 block uppercase">/{passengerCount} traveller(s)</span>
                                     </div>
                                     <button className="border-2 border-blue-500 text-blue-600 px-8 py-2.5 rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-blue-50 transition-all shadow-sm">
                                         ADD
@@ -517,7 +554,7 @@ export default function SeatsPage() {
 
                         <div className="flex items-center justify-between">
                             <button
-                                onClick={() => router.push(`/payment?id=${flightId}&airline=${airline}&price=${totalAmount}&departure=${departure}&arrival=${arrival}&from=${fromCity}&to=${toCity}&logo=${logo}`)}
+                                onClick={() => router.push(`/payment?id=${flightId}&airline=${airline}&price=${totalAmountValue}&departure=${departure}&arrival=${arrival}&from=${fromCity}&to=${toCity}&logo=${logo}`)}
                                 className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-white rounded-full py-4 px-16 font-black uppercase text-sm tracking-[0.2em] shadow-[0_15px_30px_-8px_rgba(37,99,235,0.4)] hover:scale-110 active:scale-95 transition-all"
                             >
                                 PROCEED TO PAY
@@ -538,9 +575,9 @@ export default function SeatsPage() {
                             <h3 className="text-xl font-black italic tracking-tighter mb-6">Fare Summary</h3>
                             <div className="flex flex-col gap-4">
                                 {[
-                                    { label: "Base Fare", val: "5,216" },
-                                    { label: "Taxes and Surcharges", val: "843" },
-                                    { label: "Other Services", val: "228" }
+                                    { label: "Total Base Fare", val: totalBase.toLocaleString() },
+                                    { label: "Total Taxes and Surcharges", val: taxes.toLocaleString() },
+                                    { label: "Other Services", val: otherServices.toLocaleString() }
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -556,12 +593,12 @@ export default function SeatsPage() {
                                         <Plus className="w-3.5 h-3.5 text-gray-300" />
                                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none pt-0.5">Discounts</span>
                                     </div>
-                                    <span className="text-xs font-black tabular-nums text-green-600">- ₹ 227</span>
+                                    <span className="text-xs font-black tabular-nums text-green-600">- ₹ {discounts.toLocaleString()}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between py-5 border-t-2 border-dashed border-gray-100 mt-2">
                                     <span className="text-lg font-black italic uppercase tracking-wider">Total Amount</span>
-                                    <span className="text-xl font-black italic tabular-nums">₹ {totalAmount}</span>
+                                    <span className="text-xl font-black italic tabular-nums">{totalAmountStr}</span>
                                 </div>
                             </div>
                         </div>
