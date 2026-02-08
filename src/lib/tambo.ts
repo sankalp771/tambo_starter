@@ -14,7 +14,8 @@ import { FlightSearch, flightSearchSchema } from "@/components/mmt/FlightSearch"
 import { SearchHeader } from "@/components/mmt/SearchHeader";
 import { FlightResults } from "@/components/mmt/FlightResults";
 import { FlightFilters } from "@/components/mmt/FlightFilters";
-import flightsData from "@/lib/data/flights.json";
+import rawFlightsData from "@/lib/data/flights_data.json";
+const flightsData = Array.isArray(rawFlightsData) ? rawFlightsData : (rawFlightsData as any).flights || [];
 import {
   getCountryPopulations,
   getGlobalPopulationTrend,
@@ -98,7 +99,8 @@ export const tools: TamboTool[] = [
         url.searchParams.set("date", input.date);
         window.history.pushState({}, '', url.toString());
       }
-      const results = flightsData.filter(f =>
+
+      const results = flightsData.filter((f: any) =>
         matchesCity(input.from, f.from, f.fromCity) &&
         matchesCity(input.to, f.to, f.toCity) &&
         f.date === input.date

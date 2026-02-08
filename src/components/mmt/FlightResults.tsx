@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight, Zap, Info, ChevronDown } from "lucide-react"
 import { useState } from "react";
 import { FlightDetailsModal } from "./FlightDetailsModal";
 import { useSearchParams, useRouter } from "next/navigation";
-import flightsData from "@/lib/data/flights_data.json";
+import rawFlightsData from "@/lib/data/flights_data.json";
+const flightsData = Array.isArray(rawFlightsData) ? rawFlightsData : (rawFlightsData as any).flights || [];
 import { withInteractable } from "@tambo-ai/react";
 import { z } from "zod";
 
