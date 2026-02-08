@@ -10,8 +10,10 @@ import { SearchHeader } from "@/components/mmt/SearchHeader";
 import { FlightResults } from "@/components/mmt/FlightResults";
 import { FlightFilters } from "@/components/mmt/FlightFilters";
 import { HotelSearchCard } from "@/components/mmt/hotels/HotelSearchCard";
+import { HotelOptions, hotelOptionsSchema } from "@/components/tambo/hotel-options";
 import rawFlightsData from "@/lib/data/flights_data.json";
 const flightsData = Array.isArray(rawFlightsData) ? rawFlightsData : (rawFlightsData as any).flights || [];
+import hotelsData from "@/lib/data/hotels.json";
 import {
   getCountryPopulations,
   getGlobalPopulationTrend,
@@ -152,6 +154,135 @@ const navigateToHotelDetails = defineTool({
   }
 });
 
+const startHotelFlow = defineTool({
+  name: "start_hotel_flow",
+  description:
+    "Start the hotel booking flow. If required info (city, check-in, check-out) is missing, navigate to /hotels to gather details. Otherwise go directly to results.",
+  inputSchema: z.object({
+    city: z.string().optional(),
+    checkIn: z.string().optional(),
+    checkOut: z.string().optional(),
+    rooms: z
+      .array(
+        z.object({
+          adults: z.number().min(1).max(4),
+          children: z.number().min(0).max(3),
+        }),
+      )
+      .optional(),
+  }),
+  outputSchema: z.object({ success: z.boolean(), message: z.string() }),
+  tool: async (input) => {
+    if (typeof window !== "undefined") {
+      const hasRequired =
+        Boolean(input.city) && Boolean(input.checkIn) && Boolean(input.checkOut);
+      if (!hasRequired) {
+        window.dispatchEvent(
+          new CustomEvent("tambo:navigate", { detail: { path: "/hotels" } }),
+        );
+        return {
+          success: true,
+          message: "Missing required info. Redirecting to /hotels.",
+        };
+      }
+      const params = new URLSearchParams();
+      params.set("city", input.city ?? "");
+      params.set("checkIn", input.checkIn ?? "");
+      params.set("checkOut", input.checkOut ?? "");
+      if (input.rooms) params.set("rooms", JSON.stringify(input.rooms));
+      const path = `/hotels/results?${params.toString()}`;
+      window.dispatchEvent(new CustomEvent("tambo:navigate", { detail: { path } }));
+      return { success: true, message: `Navigating to ${path}` };
+    }
+    return { success: false, message: "Window not defined" };
+  },
+});
+
+const bookHotelByName = defineTool({
+  name: "book_hotel_by_name",
+  description:
+    "Navigate to a hotel's details page by matching a hotel name from the dataset. If multiple matches, return a message listing the options.",
+  inputSchema: z.object({
+    name: z.string().min(1),
+    city: z.string().optional(),
+    checkIn: z.string().optional(),
+    checkOut: z.string().optional(),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    options: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          area: z.string(),
+          city: z.string(),
+          price: z.string(),
+          reviewRating: z.number(),
+          image: z.string().optional(),
+        }),
+      )
+      .optional(),
+    resultsPath: z.string().optional(),
+  }),
+  tool: async (input) => {
+    if (typeof window === "undefined") {
+      return { success: false, message: "Window not defined" };
+    }
+
+    const nameQuery = input.name.toLowerCase().trim();
+    const params = new URLSearchParams(window.location.search);
+    const city = (input.city || params.get("city") || "").toLowerCase().trim();
+    const checkIn = input.checkIn || params.get("checkIn") || "";
+    const checkOut = input.checkOut || params.get("checkOut") || "";
+
+    const filtered = (hotelsData as any[])
+      .filter((h) => {
+        const name = String(h.name || "").toLowerCase();
+        const cityMatch = city ? String(h.city || "").toLowerCase().includes(city) : true;
+        return cityMatch && name.includes(nameQuery);
+      })
+      .slice(0, 5);
+
+    if (filtered.length === 0) {
+      return {
+        success: false,
+        message: `No hotel matched "${input.name}". Try another name from the list.`,
+      };
+    }
+
+    if (filtered.length > 1) {
+      const options = filtered.map((h) => ({
+        id: String(h.id),
+        name: String(h.name),
+        area: String(h.area),
+        city: String(h.city),
+        price: String(h.price),
+        reviewRating: Number(h.reviewRating ?? 0),
+        image: Array.isArray(h.images) ? h.images[0] : undefined,
+      }));
+      const resultsPath = params.toString()
+        ? `/hotels/results?${params.toString()}`
+        : "/hotels/results";
+      return {
+        success: false,
+        message: `Multiple matches found for "${input.name}". Please confirm which one you want.`,
+        options,
+        resultsPath,
+      };
+    }
+
+    const hotel = filtered[0];
+    const query = new URLSearchParams();
+    if (checkIn) query.set("checkIn", checkIn);
+    if (checkOut) query.set("checkOut", checkOut);
+    const path = `/hotels/details/${hotel.id}?${query.toString()}`;
+    window.dispatchEvent(new CustomEvent("tambo:navigate", { detail: { path } }));
+    return { success: true, message: `Navigating to ${hotel.name}` };
+  },
+});
+
 export const tools: TamboTool[] = [
   {
     name: "countryPopulation",
@@ -170,6 +301,8 @@ export const tools: TamboTool[] = [
   navigateTo,
   navigateToHotelCatalog,
   navigateToHotelDetails,
+  startHotelFlow,
+  bookHotelByName,
   {
     name: "searchFlights",
     description: "Search for available flights. ALSO UPDATES THE URL to show results on the page.",
@@ -299,5 +432,12 @@ export const components: TamboComponent[] = [
     description: "Interactive hotel search form.",
     component: InteractableHotelSearchCard,
     propsSchema: HotelSearchSchema.partial(),
+  },
+  {
+    name: "HotelOptions",
+    description:
+      "Shows a short list of matching hotels so the user can pick one to view details.",
+    component: HotelOptions,
+    propsSchema: hotelOptionsSchema,
   }
 ];

@@ -6,6 +6,7 @@ import { Star, Filter, Loader2, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { getHotelsByCity, type Hotel } from "@/services/hotels";
 import { Header } from "@/components/layout/Header";
+import { formatDateLabel, parseRoomsParam } from "@/lib/utils";
 
 function HotelResultsContent() {
   const router = useRouter();
@@ -20,8 +21,9 @@ function HotelResultsContent() {
   const [sortBy, setSortBy] = useState<string>("Popularity");
 
   const city = searchParams.get("city") || "Goa";
-  const checkIn = searchParams.get("checkIn") || "20-02-2026";
-  const checkOut = searchParams.get("checkOut") || "23-02-2026";
+  const checkIn = searchParams.get("checkIn") || "2026-02-20";
+  const checkOut = searchParams.get("checkOut") || "2026-02-23";
+  const roomsInfo = parseRoomsParam(searchParams.get("rooms"));
 
   // Fetch hotels when city changes
   useEffect(() => {
@@ -92,9 +94,51 @@ function HotelResultsContent() {
       return 0;
     });
 
+  const topPicks = [...filteredAndSortedHotels]
+    .sort((a, b) => {
+      if (b.reviewRating !== a.reviewRating) return b.reviewRating - a.reviewRating;
+      return b.reviewCount - a.reviewCount;
+    })
+    .slice(0, 3);
+
   const handleHotelClick = (id: string) => {
     router.push(`/hotels/details/${id}?checkIn=${checkIn}&checkOut=${checkOut}`);
   };
+
+  const applySuggestedFilter = (suggestion: {
+    priceRange?: string;
+    starRating?: number;
+    minUserRating?: number;
+    sort?: string;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (suggestion.priceRange) params.set("priceRange", suggestion.priceRange);
+    if (suggestion.starRating) params.set("starRating", String(suggestion.starRating));
+    if (suggestion.minUserRating) params.set("minUserRating", String(suggestion.minUserRating));
+    if (suggestion.sort) params.set("sort", suggestion.sort);
+    router.push(`/hotels/results?${params.toString()}`);
+  };
+
+  const suggestedFilters = [
+    {
+      label: "Top Rated 4.0+",
+      description: "Best reviewed stays",
+      minUserRating: 4,
+      sort: "User Rating",
+    },
+    {
+      label: "Budget Under ₹5000",
+      description: "Great value picks",
+      priceRange: "â‚¹2000 - â‚¹5000",
+      sort: "Price (Low to High)",
+    },
+    {
+      label: "Premium 4★+",
+      description: "Comfort & amenities",
+      starRating: 4,
+      sort: "Popularity",
+    },
+  ];
 
   return (
     <div className="bg-[#f2f2f2] min-h-screen pb-20">
@@ -109,17 +153,23 @@ function HotelResultsContent() {
           <div className="h-8 w-[1px] bg-gray-200"></div>
           <div className="flex flex-col">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">CHECK-IN</span>
-            <span className="font-black text-lg">{checkIn}</span>
+            <span className="font-black text-lg">{formatDateLabel(checkIn)}</span>
           </div>
           <div className="h-8 w-[1px] bg-gray-200"></div>
           <div className="flex flex-col">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">CHECK-OUT</span>
-            <span className="font-black text-lg">{checkOut}</span>
+            <span className="font-black text-lg">{formatDateLabel(checkOut)}</span>
           </div>
           <div className="h-8 w-[1px] bg-gray-200"></div>
           <div className="flex flex-col">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">ROOMS & GUESTS</span>
-            <span className="font-black text-lg">1 Room, 2 Adults</span>
+            <span className="font-black text-lg">
+              {roomsInfo.rooms} Room{roomsInfo.rooms > 1 ? "s" : ""},{" "}
+              {roomsInfo.adults} Adult{roomsInfo.adults !== 1 ? "s" : ""}
+              {roomsInfo.children > 0
+                ? `, ${roomsInfo.children} Child${roomsInfo.children !== 1 ? "ren" : ""}`
+                : ""}
+            </span>
           </div>
         </div>
         <button className="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-8 py-2.5 rounded-full font-black text-xs shadow-lg hover:shadow-xl transition-all uppercase tracking-widest">
@@ -221,6 +271,77 @@ function HotelResultsContent() {
 
         {/* List */}
         <main className="flex-1 space-y-6">
+           <div className="bg-white rounded-xl border border-blue-100 shadow-sm p-4 flex items-center justify-between">
+             <div>
+               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">AI Concierge</p>
+               <p className="text-sm font-bold text-gray-700">Suggested filters for your trip</p>
+             </div>
+             <div className="flex gap-3 flex-wrap justify-end">
+               {suggestedFilters.map((s) => (
+                 <button
+                   key={s.label}
+                   onClick={() => applySuggestedFilter(s)}
+                   className="px-4 py-2 rounded-full border border-blue-200 text-blue-700 text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all"
+                 >
+                   {s.label}
+                 </button>
+               ))}
+             </div>
+           </div>
+
+           {topPicks.length > 0 && (
+             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+               <div className="flex items-center justify-between mb-4">
+                 <div>
+                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Top Picks</p>
+                   <h3 className="text-lg font-black text-gray-800">Best 3 options for you</h3>
+                 </div>
+                 <a
+                   href="#all-results"
+                   className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline"
+                 >
+                   View all options
+                 </a>
+               </div>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 {topPicks.map((hotel) => (
+                   <div
+                     key={hotel.id}
+                     className="border rounded-xl overflow-hidden hover:border-blue-400 transition-all shadow-sm bg-white"
+                   >
+                     <div className="h-36 bg-gray-100 overflow-hidden">
+                       <img
+                         src={hotel.images[0]}
+                         alt={hotel.name}
+                         className="w-full h-full object-cover"
+                       />
+                     </div>
+                     <div className="p-4">
+                       <div className="flex items-center justify-between mb-1">
+                         <p className="text-xs font-black text-gray-800">{hotel.name}</p>
+                         <div className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded">
+                           {hotel.reviewRating}
+                         </div>
+                       </div>
+                       <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                         {hotel.area}, {hotel.city}
+                       </p>
+                       <div className="flex items-center justify-between mt-3">
+                         <p className="text-lg font-black text-gray-900">₹ {hotel.price}</p>
+                         <button
+                           onClick={() => handleHotelClick(hotel.id)}
+                           className="bg-[#008cff] hover:bg-[#005cff] text-white px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                         >
+                           Select
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
+
            <div className="flex justify-between items-end">
              <h2 className="text-2xl font-black text-gray-800 tracking-tight">
                {loading ? "Searching properties..." : `Showing ${filteredAndSortedHotels.length} Properties in ${city}`}
@@ -248,6 +369,7 @@ function HotelResultsContent() {
            ) : filteredAndSortedHotels.length > 0 ? (
              filteredAndSortedHotels.map((hotel, idx) => (
                 <motion.div 
+                 id={idx === 0 ? "all-results" : undefined}
                  key={hotel.id}
                  initial={{ opacity: 0, y: 20 }}
                  whileInView={{ opacity: 1, y: 0 }}

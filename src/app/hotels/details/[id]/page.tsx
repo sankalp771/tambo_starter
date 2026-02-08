@@ -5,6 +5,7 @@ import { useEffect, useState, useLayoutEffect, Suspense } from "react";
 import { Star, MapPin, CheckCircle2, ChevronRight, Share2, Heart, Loader2 } from "lucide-react";
 import { getHotelById, type Hotel } from "@/services/hotels";
 import { Header } from "@/components/layout/Header";
+import { formatDateLabel } from "@/lib/utils";
 
 function HotelDetailsContent() {
   const params = useParams();
@@ -14,8 +15,8 @@ function HotelDetailsContent() {
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkIn = searchParams.get("checkIn") || "20 Feb, 2026";
-  const checkOut = searchParams.get("checkOut") || "23 Feb, 2026";
+  const checkIn = searchParams.get("checkIn") || "2026-02-20";
+  const checkOut = searchParams.get("checkOut") || "2026-02-23";
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
@@ -164,11 +165,11 @@ function HotelDetailsContent() {
                  <div className="space-y-4 border-b pb-6 mb-6">
                     <div className="flex justify-between items-center">
                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Check-in</span>
-                       <span className="font-black text-gray-800">{checkIn}</span>
+                       <span className="font-black text-gray-800">{formatDateLabel(checkIn)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Check-out</span>
-                       <span className="font-black text-gray-800">{checkOut}</span>
+                       <span className="font-black text-gray-800">{formatDateLabel(checkOut)}</span>
                     </div>
                  </div>
                  <div className="flex justify-between items-end">

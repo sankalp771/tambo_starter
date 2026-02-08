@@ -8,6 +8,7 @@ import { HotelBookingReviewSchema, type HotelBookingReview } from "@/lib/schemas
 import { getHotelById, type Hotel } from "@/services/hotels";
 import { Check, ShieldCheck, Info, Loader2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { formatDateLabel } from "@/lib/utils";
 
 function HotelReviewContent() {
   const router = useRouter();
@@ -17,8 +18,8 @@ function HotelReviewContent() {
 
   const hotelId = searchParams.get("hotelId");
   const roomId = searchParams.get("roomId");
-  const checkIn = searchParams.get("checkIn") || "20-02-2026";
-  const checkOut = searchParams.get("checkOut") || "23-02-2026";
+  const checkIn = searchParams.get("checkIn") || "2026-02-20";
+  const checkOut = searchParams.get("checkOut") || "2026-02-23";
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<HotelBookingReview>({
     resolver: zodResolver(HotelBookingReviewSchema),
@@ -88,11 +89,11 @@ function HotelReviewContent() {
                 <div className="flex gap-8 mt-4 pt-4 border-t">
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-in</p>
-                    <p className="font-black text-gray-800">{checkIn}</p>
+                    <p className="font-black text-gray-800">{formatDateLabel(checkIn)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-out</p>
-                    <p className="font-black text-gray-800">{checkOut}</p>
+                    <p className="font-black text-gray-800">{formatDateLabel(checkOut)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Room Type</p>

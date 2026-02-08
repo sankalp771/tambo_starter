@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown, Globe } from "lucide-react";
-import Link from "next/navigation";
 
 export function Header() {
   return (
