@@ -1,8 +1,9 @@
 "use client";
 
 import { SearchTabs } from "@/components/mmt/SearchTabs";
-import { MessageSquare, ChevronDown, Globe, MapPin } from "lucide-react";
+import { MessageSquare, Globe, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Header } from "@/components/layout/Header";
 
 const StarsBackground = () => {
   const [stars, setStars] = useState<{ top: string; left: string; width: string; height: string }[]>([]);
@@ -46,54 +47,20 @@ export default function Home() {
           <StarsBackground />
         </div>
 
-        {/* Navigation */}
-        <nav className="relative z-30 mx-auto max-w-[1240px] flex items-center justify-between px-4 py-3">
-          <div className="flex items-center">
-            <div className="flex items-center gap-1.5 cursor-pointer">
-              <div className="bg-white p-1.5 rounded-sm">
-                <div className="w-5 h-5 bg-[#e01e26] rounded-sm flex items-center justify-center text-[10px] font-black text-white italic">my</div>
-              </div>
-              <div className="text-white text-2xl font-black italic tracking-tighter">make <span className="text-blue-400">my</span> trip</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center gap-5 text-[11px] font-bold text-white uppercase tracking-tight">
-              <div className="flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100">
-                <span className="text-orange-400">🏡</span> List Your Property
-              </div>
-              <div className="flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100">
-                <span className="text-blue-400">💼</span> myBiz <span className="text-[7px] bg-white/20 px-1 rounded ml-1">NEW</span>
-              </div>
-              <div className="flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100 border-l border-white/20 pl-5">
-                <span className="text-red-400">❤️</span> Wishlist
-              </div>
-              <div className="flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100">
-                <span className="text-yellow-400">🎒</span> My Trips
-              </div>
-            </div>
-
-            <div className="flex items-center bg-blue-500/10 border border-blue-400/20 rounded-md px-3 py-2 cursor-pointer hover:bg-blue-500/20 transition-all ml-4">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-300 to-blue-600 flex items-center justify-center text-[10px] text-white font-bold mr-2 shadow-inner">👤</div>
-              <div className="text-white text-[11px] font-black uppercase">Login or Create Account <ChevronDown className="inline w-3 h-3 ml-1" /></div>
-            </div>
-
-            <div className="flex items-center gap-3 border-l border-white/20 pl-6 ml-4">
-              <div className="flex items-center gap-1.5 text-white text-[11px] font-bold uppercase cursor-pointer">
-                <Globe className="w-4 h-4 text-green-400" /> INR <ChevronDown className="w-3 h-3" />
-              </div>
-            </div>
-          </div>
-        </nav>
+        <Header variant="dark" className="absolute top-0 left-0 w-full bg-transparent border-none shadow-none z-50 px-2 lg:px-4 max-w-[1240px] mx-auto right-0" />
 
         {/* Hero Main Content */}
         <div className="relative z-20 mt-20 max-w-[1240px] mx-auto px-4">
-          {/* The FlightSearch component is positioned here, overlapping the bottom */}
-          <div className="flex items-end justify-between mb-2">
-            <div className="text-white/40 text-xs font-medium uppercase tracking-[3px]">Travel Bliss Awaits</div>
-            <div className="text-white/60 text-xs font-bold flex items-center gap-2">
-              Book International and Domestic Flights <MapPin className="w-3 h-3" />
-            </div>
+          {/* Hero Tagline */}
+          <div className="max-w-[1000px] mt-12 mb-20 animate-in fade-in slide-in-from-bottom-5 duration-1000">
+            <h1 className="text-white text-5xl md:text-[76px] font-serif italic leading-tight mb-8 tracking-tighter">
+              Your journey, <span className="text-blue-400">simply easier.</span>
+            </h1>
+            <p className="text-white/70 text-xl md:text-2xl font-medium max-w-3xl leading-relaxed">
+              MakeMyTrip platform powered by Tambo's <span className="text-blue-400/90 italic">cutting-edge</span> AI agents.
+              Discover destinations, book stays, and explore the world through a
+              single, intelligent conversation.
+            </p>
           </div>
         </div>
       </div>
@@ -123,8 +90,8 @@ export default function Home() {
             <div className="px-6 py-2 flex items-center gap-3 cursor-pointer hover:text-blue-600 group">
               <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:bg-purple-100"><div className="text-blue-800 font-bold">ICICI</div></div>
               <div>
-                <p className="text-xs font-bold leading-tight uppercase">MakeMyTrip ICICI Credit Card</p>
-                <p className="text-[10px] text-gray-500 font-medium">Never-expring rewards & big benefits</p>
+                <p className="text-xs font-bold leading-tight uppercase">MakeMyTrip ICICI Card</p>
+                <p className="text-[10px] text-gray-500 font-medium">Big rewards & benefits</p>
               </div>
             </div>
           </div>
@@ -140,6 +107,17 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mid-Section Tagline */}
+      <div className="max-w-[1240px] mx-auto mt-28 mb-16 px-4 text-center animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-300">
+        <h2 className="text-gray-900 text-4xl md:text-5xl font-serif italic mb-6 leading-tight tracking-tight">
+          Don't just travel. <span className="text-blue-600">Discover yours.</span>
+        </h2>
+        <p className="text-gray-500 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed opacity-70">
+          Our intelligent agents sift through thousands of possibilities to find exactly what resonates with you.
+          Personalized matches, real-time availability, and effortless orchestration.
+        </p>
       </div>
 
       {/* Offers Section */}
